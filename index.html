@@ -291,6 +291,23 @@
     border-top:1px dashed var(--line);
     background:#0D1319;
   }
+  .tip-row{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .tip-input{
+    width:110px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:transparent;
+    color:var(--ink);
+    padding:12px 12px;
+    outline:none;
+    font-family:'Inter';
+    font-size:14px;
+    text-align:right;
+  }
   .total-row{
     display:flex; justify-content:space-between; align-items:baseline;
     margin-bottom:16px;
@@ -438,6 +455,10 @@
   </div>
   <div class="ticket-items" id="ticket-items"></div>
   <div class="ticket-footer">
+    <div class="tip-row">
+      <span class="label">Tip (optional)</span>
+      <input id="tip-input" class="tip-input" type="number" min="0" step="0.50" placeholder="0.00">
+    </div>
     <div class="total-row">
       <span class="label">Total</span>
       <span class="amount" id="ticket-total">$0.00</span>
@@ -455,6 +476,7 @@
   <div class="confirm-mark">&#10003;</div>
   <h2>Order placed</h2>
   <p>Thank you. Your dishes are being prepared and will be brought to your table shortly.</p>
+  <p>Please do rate us after you are done eating, and thank you for your support.</p>
   <div class="confirm-order-no" id="confirm-order-no"></div>
   <div class="confirm-status"><span class="pulse-dot"></span> Preparing your order</div>
   <button class="back-to-menu" id="back-to-menu">Add more to this order</button>
@@ -543,6 +565,7 @@ refreshTableDisplays();
 
 let cart = [];
 let cartIdSeq = 1;
+let tipAmount = 0;
 const fmt = n => `$${n.toFixed(2)}`;
 
 const menuRoot = document.getElementById('menu-root');
@@ -664,13 +687,14 @@ const tabCount = document.getElementById('tab-count');
 const ticketItemsEl = document.getElementById('ticket-items');
 const ticketTotalEl = document.getElementById('ticket-total');
 const placeOrderBtn = document.getElementById('place-order-btn');
+const tipInput = document.getElementById('tip-input');
 
 function cartTotal(){ return cart.reduce((s,c)=>s+c.unitPrice*c.qty,0); }
 function cartCount(){ return cart.reduce((s,c)=>s+c.qty,0); }
 
 function renderCart(){
   const count = cartCount();
-  tabTotal.textContent = fmt(cartTotal());
+  tabTotal.textContent = fmt(cartTotal() + tipAmount);
   tabCount.textContent = count;
   ticketTab.classList.toggle('hidden', count===0);
 
@@ -695,10 +719,15 @@ function renderCart(){
       btn.onclick = () => changeQty(+btn.dataset.id, btn.dataset.act==='inc'?1:-1);
     });
   }
-  ticketTotalEl.textContent = fmt(cartTotal());
+  ticketTotalEl.textContent = fmt(cartTotal() + tipAmount);
   placeOrderBtn.disabled = count===0;
 }
 renderCart();
+
+tipInput.addEventListener('input', () => {
+  tipAmount = Math.max(0, Number(tipInput.value) || 0);
+  renderCart();
+});
 
 function pulseTicketTab(){
   ticketTab.style.transform = 'scale(1.06)';
@@ -734,7 +763,8 @@ placeOrderBtn.onclick = async () => {
     table_number: table,
     guest_name: finalName,
     items: cart.map(c => ({name: c.name, variantLabel: c.variantLabel, unitPrice: c.unitPrice, qty: c.qty})),
-    total: cartTotal(),
+    total: cartTotal() + tipAmount,
+    tip: tipAmount,
     status: 'placed'
   };
 
@@ -758,6 +788,8 @@ placeOrderBtn.onclick = async () => {
   closeTicket();
   confirmScreen.classList.add('open');
   cart = [];
+  tipAmount = 0;
+  tipInput.value = '';
   renderCart();
   placeOrderBtn.textContent = 'Place Order';
 };
