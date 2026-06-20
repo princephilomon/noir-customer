@@ -777,7 +777,8 @@ placeOrderBtn.onclick = async () => {
       console.error('Order failed to sync:', error);
       placeOrderBtn.textContent = 'Place Order';
       placeOrderBtn.disabled = false;
-      alert('Something went wrong sending your order. Please try again or call a waiter.');
+      const errorDetails = [error.message, error.details, error.hint].filter(Boolean).join(' \n');
+      alert(`Something went wrong sending your order. Please try again or call a waiter.\n\n${errorDetails}`);
       return;
     }
   } else {
