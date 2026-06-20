@@ -764,9 +764,12 @@ placeOrderBtn.onclick = async () => {
     guest_name: finalName,
     items: cart.map(c => ({name: c.name, variantLabel: c.variantLabel, unitPrice: c.unitPrice, qty: c.qty})),
     total: cartTotal() + tipAmount,
-    tip: tipAmount,
     status: 'placed'
   };
+
+  if (tipAmount > 0) {
+    orderPayload.tip = tipAmount;
+  }
 
   placeOrderBtn.disabled = true;
   placeOrderBtn.textContent = 'Sending to kitchen…';
