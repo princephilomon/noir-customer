@@ -383,6 +383,60 @@
     font-size:28px; color:var(--teal);
     box-shadow:0 0 30px rgba(45,212,191,0.35);
   }
+  .rating-card{
+    margin:18px 0 10px;
+    padding:16px 20px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    background:rgba(31,41,55,0.95);
+    width:min(100%, 360px);
+  }
+  .rating-title{
+    font-family:'Fraunces', serif;
+    font-size:18px;
+    color:var(--ink);
+    margin-bottom:12px;
+  }
+  .rating-stars{
+    display:flex; justify-content:center; gap:8px;
+    margin-bottom:14px;
+  }
+  .star-btn{
+    width:42px; height:42px; border-radius:50%;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink-dim);
+    font-size:20px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .star-btn.selected,
+  .star-btn:hover{
+    color:var(--teal);
+    border-color:var(--teal);
+    background:rgba(45,212,191,0.12);
+  }
+  .rating-submit{
+    width:100%; padding:12px 0;
+    border:none;
+    border-radius:10px;
+    background:var(--teal);
+    color:#06201C;
+    font-family:'Inter';
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .rating-submit:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  .rating-thanks{
+    margin-top:12px;
+    font-size:13px;
+    color:var(--teal-soft);
+    min-height:18px;
+  }
   .confirm-screen h2{ font-family:'Fraunces', serif; font-size:28px; margin:0 0 10px; color:var(--ink); }
   .confirm-screen p{ font-size:14px; color:var(--ink-dim); max-width:300px; line-height:1.6; margin:0 0 6px;}
   .confirm-order-no{ font-family:'Fraunces', serif; font-style:italic; font-size:15px; color:var(--teal-soft); margin:18px 0 26px; }
@@ -477,6 +531,18 @@
   <h2>Order placed</h2>
   <p>Thank you. Your dishes are being prepared and will be brought to your table shortly.</p>
   <p>Please do rate us after you are done eating, and thank you for your support.</p>
+  <div class="rating-card">
+    <div class="rating-title">Rate your experience</div>
+    <div class="rating-stars" id="rating-stars">
+      <button class="star-btn" data-value="1">&#9734;</button>
+      <button class="star-btn" data-value="2">&#9734;</button>
+      <button class="star-btn" data-value="3">&#9734;</button>
+      <button class="star-btn" data-value="4">&#9734;</button>
+      <button class="star-btn" data-value="5">&#9734;</button>
+    </div>
+    <button class="rating-submit" id="rating-submit" disabled>Submit rating</button>
+    <div class="rating-thanks" id="rating-thanks"></div>
+  </div>
   <div class="confirm-order-no" id="confirm-order-no"></div>
   <div class="confirm-status"><span class="pulse-dot"></span> Preparing your order</div>
   <button class="back-to-menu" id="back-to-menu">Add more to this order</button>
@@ -743,7 +809,32 @@ document.getElementById('ticket-close').onclick = closeTicket;
 ticketOverlay.onclick = closeTicket;
 
 const confirmScreen = document.getElementById('confirm-screen');
+const ratingStars = document.getElementById('rating-stars');
+const ratingSubmit = document.getElementById('rating-submit');
+const ratingThanks = document.getElementById('rating-thanks');
 let orderCounter = 100;
+let currentRating = 0;
+
+function updateRatingUI(value){
+  currentRating = value;
+  ratingStars.querySelectorAll('.star-btn').forEach(btn => {
+    const starValue = Number(btn.dataset.value);
+    btn.classList.toggle('selected', starValue <= value);
+    btn.textContent = starValue <= value ? '★' : '☆';
+  });
+  ratingSubmit.disabled = value === 0;
+}
+
+ratingStars.addEventListener('click', e => {
+  if (!e.target.classList.contains('star-btn')) return;
+  updateRatingUI(Number(e.target.dataset.value));
+});
+
+ratingSubmit.onclick = () => {
+  if (currentRating === 0) return;
+  ratingThanks.textContent = `Thanks for rating us ${currentRating} star${currentRating > 1 ? 's' : ''}!`;
+  ratingSubmit.disabled = true;
+};
 
 placeOrderBtn.onclick = async () => {
   const name = document.getElementById('guest-name').value.trim();
@@ -794,6 +885,9 @@ placeOrderBtn.onclick = async () => {
   cart = [];
   tipAmount = 0;
   tipInput.value = '';
+  currentRating = 0;
+  ratingThanks.textContent = '';
+  updateRatingUI(0);
   renderCart();
   placeOrderBtn.textContent = 'Place Order';
 };
